@@ -6,6 +6,8 @@ from .views import PostViewSet, CommentViewSet, GroupViewSet, FollowViewSet
 
 VERSION = 'v1'
 
+app_name = 'api'
+
 router = routers.DefaultRouter()
 router.register('posts', PostViewSet, basename='posts')
 router.register('groups', GroupViewSet, basename='groups')
