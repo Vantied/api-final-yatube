@@ -1,13 +1,15 @@
-from rest_framework import viewsets, permissions, filters
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.exceptions import PermissionDenied, ValidationError
-
 from django.shortcuts import get_object_or_404
+from rest_framework import filters, permissions, viewsets
+from rest_framework.pagination import LimitOffsetPagination
 
-from posts.models import Post, Group, Follow
-from .serializers import (
-    PostSerializer, CommentSerializer, GroupSerializer, FollowSerializer)
+from posts.models import Group, Post
 from .permissions import IsAuthorOrReadOnly
+from .serializers import (
+    CommentSerializer,
+    FollowSerializer,
+    GroupSerializer,
+    PostSerializer,
+)
 
 
 class IsAuthorAndAuthenticated(viewsets.ModelViewSet):
@@ -25,8 +27,6 @@ class PostViewSet(IsAuthorAndAuthenticated):
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
-        if self.request.user.is_anonymous:
-            raise PermissionDenied("Не авторизован")
         serializer.save(author=self.request.user)
 
 
@@ -59,12 +59,7 @@ class FollowViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
-        following_user = serializer.validated_data['following']
-        if Follow.objects.filter(
-            user=self.request.user, following=following_user
-        ).exists():
-            raise ValidationError("Вы уже подписаны на этого пользователя")
         serializer.save(user=self.request.user)
